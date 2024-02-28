@@ -2,16 +2,13 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <chrono>
 #include <cstring>
 #include <winsock2.h>
 
 #define BUFFERSIZE 1024
 #define LIMIT "10000000"
 #define THREAD_COUNT "1"
-
-std::vector<int> primes;
-std::mutex primes_mutex;
-
 
 int main() {
   char buffer[BUFFERSIZE];
@@ -54,7 +51,21 @@ int main() {
   if(strcmp(buffer, "") == 0)
     send(clientSocket, THREAD_COUNT, sizeof(buffer), 0);
   else
-    send(clientSocket, buffer, sizeof(buffer), 0);   
+    send(clientSocket, buffer, sizeof(buffer), 0);
+
+  // start timer
+  auto start_time = std::chrono::high_resolution_clock::now();
+
+  //Receive results from server
+  recv(clientSocket, buffer, sizeof(buffer), 0);
+
+  // stop timer
+  auto end_time = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+  // print output
+  std::cout << "\nTotal Time Taken: " << duration << " ms" << std::endl;
+  std::cout << buffer << " primes were found." << std::endl;
 	
   //closing socket 
   closesocket(clientSocket);  
