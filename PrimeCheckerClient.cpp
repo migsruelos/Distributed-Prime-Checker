@@ -5,8 +5,7 @@
 #include <chrono>
 #include <cstring>
 #include <winsock2.h> 
-#include "winsock.h" 
-#include <unistd.h> 
+#include <winsock.h>
 
 #define LIMIT 10000000
 
@@ -61,7 +60,7 @@ int main() {
     send(clientSocket, reinterpret_cast<const char*>(&num_threads), sizeof(num_threads), 0);
 	
  // closing socket 
-    close(clientSocket);  
+    closesocket(clientSocket);  
 
   return 0;
 }
