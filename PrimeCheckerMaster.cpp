@@ -92,10 +92,6 @@ int main()
         else
             cout << "Invalid input!\n";
     }
-
-    if(useSlaves){ //Connect to slave servers
-
-    }
     
     // Initialize WSA variables
     WSADATA wsaData;
@@ -109,14 +105,24 @@ int main()
         return 0;
     }
     
-    // creating socket 
-    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    // creating sockets
+    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET slaveSocket = INVALID_SOCKET;  
   
-    // specifying the address 
-    sockaddr_in serverAddress; 
+    // specifying the addresses 
+    sockaddr_in serverAddress, slaveAddress; 
     serverAddress.sin_family = AF_INET; 
     serverAddress.sin_port = htons(8080); 
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    slaveAddress.sin_family = AF_INET; 
+    slaveAddress.sin_port = htons(5555); 
+    slaveAddress.sin_addr.s_addr = inet_addr("127.0.0.2"); 
+
+    if(useSlaves){ //Connect to slave servers
+      slaveSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+      connect(slaveSocket, (struct sockaddr*)&slaveAddress, sizeof(slaveAddress));
+    }
   
     // binding socket. 
     bind(serverSocket, (struct sockaddr*)&serverAddress, 
@@ -142,14 +148,34 @@ int main()
       recv(clientSocket, buffer, sizeof(buffer), 0);
       result_threads = atoi(buffer);
 
-      if(!useSlaves || true)//Replace with !useSlaves after slave servers implemented
+      if(!useSlaves)//Replace with !useSlaves after slave servers implemented
         //If the user at server start decides not to use slave servers
         primeChecker(1, result_bound, result_threads);
       else{
         //Else use slave servers
+        primeChecker(1, result_bound/2, result_threads); //First half calc here
+
+        //Convert ints to char[]
+        std::string s = std::to_string((result_bound/2)+1);
+        char const *lower = s.c_str();
+        s = std::to_string(result_bound);
+        char const *upper = s.c_str();
+        s = std::to_string(result_threads);
+        char const *thread = s.c_str();
+
+        //Send data of second half to slave
+        send(slaveSocket, lower, sizeof(buffer), 0);
+        send(slaveSocket, upper, sizeof(buffer), 0);
+        send(slaveSocket, thread, sizeof(buffer), 0);
+
+        //Receive result from slave, add to numPrimes
+        recv(slaveSocket, buffer, sizeof(buffer), 0);
+        numPrimes += atoi(buffer);
       }
+
       //Send the results back to client
       std::string s = std::to_string(numPrimes);
+      numPrimes = 0; //Reset
       char const *res = s.c_str();
       send(clientSocket, res, sizeof(buffer), 0);
     }

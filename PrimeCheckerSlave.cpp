@@ -1,32 +1,81 @@
 #include <iostream>
-#include <winsock2.h>
+#include <thread>
+#include <mutex>
+#include <vector>
+#include <cstring>
+#include <winsock2.h> 
+  
+using namespace std; 
 
-using namespace std;
-
+#define LIMIT 10000000
 #define BUFFERSIZE 1024
 
-int primeCheckerSlave(int start, int end) {
-    int count = 0;
+std::vector<int> primes;
+std::mutex primes_mutex;
+int numPrimes;
 
-    for (int current_num = start; current_num <= end; current_num++) {
-        bool is_prime = true;
-
-        for (int i = 2; i * i <= current_num; i++) {
-            if (current_num % i == 0) {
-                is_prime = false;
-                break;
-            }
-        }
-
-        if (is_prime) {
-            count++;
-        }
+bool check_prime(const int &n) {
+	
+  for (int i = 2; i * i <= n; i++) {
+    if (n % i == 0) {
+      return false;
     }
-
-    return count;
+  }
+  
+  return true;
 }
 
-int main() {
+/*
+This function implements mutual exclusion for the `primes` list.
+
+Parameters:
+start : int - start of the range (inclusive)
+end : int - end of the range (inclusive)
+*/
+void get_primes(int start, int end) {
+	
+  for (int current_num = start; current_num <= end; current_num++) {
+    bool is_prime = check_prime(current_num);
+
+    if (is_prime) {
+      {
+        std::lock_guard<std::mutex> lock(primes_mutex);
+        primes.push_back(current_num);
+      }
+    }
+  }
+  
+}
+
+
+void primeChecker(int l, int u, int t) {
+  int upper_bound = u;
+  int num_threads = t;
+
+  // split the range of integers across the specified number of threads
+  std::vector<std::thread> threads;
+  int range_size = upper_bound / num_threads;
+  
+  for (int i = 0; i < num_threads; i++) {
+    int start = i * range_size + l;
+    int end = (i == num_threads - 1) ? upper_bound : (i + 1) * range_size;
+    threads.emplace_back(get_primes, start, end);
+  }
+
+  // join threads
+  for (auto &thread : threads) {
+    thread.join();
+  }
+  
+  numPrimes = primes.size(); //Save number of primes
+  primes.clear(); //Empty vector
+}
+
+
+int main() 
+{ 
+    char buffer[BUFFERSIZE];
+    
     // Initialize WSA variables
     WSADATA wsaData;
     int wsaerr;
@@ -38,41 +87,56 @@ int main() {
         std::cout << "Startup error!" << std::endl;
         return 0;
     }
+    
+    // creating socket 
+    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+  
+    // specifying the address 
+    sockaddr_in serverAddress; 
+    serverAddress.sin_family = AF_INET; 
+    serverAddress.sin_port = htons(5555); 
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.2"); 
+  
+    // binding socket. 
+    bind(serverSocket, (struct sockaddr*)&serverAddress, 
+         sizeof(serverAddress)); 
+  
+    // listening to the assigned socket 
+    listen(serverSocket, 5);
+    cout << endl << "PrimeCheckerSlave is running..." << endl;
 
-    // Create socket
-    SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    while(true){ //Make server continuously accept requests until it is closed in cmd
+      // accepting connection request
+      int clientSocket = accept(serverSocket, nullptr, nullptr); 
+    
+      // recieving data 
+      int result_start = -1;
+      int result_bound = -1;
+      int result_threads = -1;
 
-    // Specify server address
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8080);
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+      // receive lower limit
+      recv(clientSocket, buffer, sizeof(buffer), 0);
+      result_start = atoi(buffer);
+      
+      // receive upper limit
+      recv(clientSocket, buffer, sizeof(buffer), 0);
+      result_bound = atoi(buffer);
+      
+      // receive threads count
+      recv(clientSocket, buffer, sizeof(buffer), 0);
+      result_threads = atoi(buffer);
 
-    // Connect to the server
-    connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+      primeChecker(result_start ,result_bound, result_threads); //Do Calcs
 
-    // Get input for the range from the master
-    char buffer[BUFFERSIZE];
-    int start, end;
+      //Send the results back to client
+      std::string s = std::to_string(numPrimes);
+      numPrimes = 0; //Reset
+      char const *res = s.c_str();
+      send(clientSocket, res, sizeof(buffer), 0);
+    }
 
-    cout << "Enter the start of the range: ";
-    cin >> start;
-    cout << "Enter the end of the range: ";
-    cin >> end;
-
-    // Send the range to the master
-    send(clientSocket, to_string(start).c_str(), sizeof(buffer), 0);
-    send(clientSocket, to_string(end).c_str(), sizeof(buffer), 0);
-
-    // Receive the result from the master
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    int numPrimes = atoi(buffer);
-
-    cout << "Number of primes in the range: " << numPrimes << endl;
-
-    // Close the socket
-    closesocket(clientSocket);
-
-    return 0;
+    // closing the socket. 
+    closesocket(serverSocket); 
+  
+    return 0; 
 }
-
