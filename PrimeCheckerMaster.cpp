@@ -54,11 +54,11 @@ void primeChecker(int l, int u, int t) {
 
   // split the range of integers across the specified number of threads
   std::vector<std::thread> threads;
-  int range_size = upper_bound / num_threads;
+  int range_size = (upper_bound - l) / num_threads;
   
   for (int i = 0; i < num_threads; i++) {
     int start = i * range_size + l;
-    int end = (i == num_threads - 1) ? upper_bound : (i + 1) * range_size;
+    int end = (i == num_threads - 1) ? upper_bound : (i + 1) * range_size + l - 1;
     threads.emplace_back(get_primes, start, end);
   }
 
