@@ -68,6 +68,7 @@ void primeChecker(int u, int t) {
   }
   
   numPrimes = primes.size(); //Save number of primes
+  primes.clear(); //Empty vector
 }
 
 
@@ -122,31 +123,34 @@ int main()
     // listening to the assigned socket 
     listen(serverSocket, 5);
     cout << endl << "PrimeCheckerMaster is running..." << endl;
-  
-    // accepting connection request 
-    int clientSocket = accept(serverSocket, nullptr, nullptr); 
-  
-    // recieving data 
-    int result_bound = -1;
-    int result_threads = -1;
 
-    // receive upper limit
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    result_bound = atoi(buffer);
+    while(true){ //Make server continuously accept requests until it is closed in cmd
+      // accepting connection request
+      int clientSocket = accept(serverSocket, nullptr, nullptr); 
     
-    // receive threads count
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    result_threads = atoi(buffer);
+      // recieving data 
+      int result_bound = -1;
+      int result_threads = -1;
 
-    if(useSlaves || true)//Replace with useSlaves after slave serves implemented
+      // receive upper limit
+      recv(clientSocket, buffer, sizeof(buffer), 0);
+      result_bound = atoi(buffer);
+      
+      // receive threads count
+      recv(clientSocket, buffer, sizeof(buffer), 0);
+      result_threads = atoi(buffer);
+
+      if(!useSlaves || true)//Replace with !useSlaves after slave servers implemented
+        //If the user at server start decides not to use slave servers
         primeChecker(result_bound, result_threads);
-    else{
-
+      else{
+        //Else use slave servers
+      }
+      //Send the results back to client
+      std::string s = std::to_string(numPrimes);
+      char const *res = s.c_str();
+      send(clientSocket, res, sizeof(buffer), 0);
     }
-    //Send the results back to client
-    std::string s = std::to_string(numPrimes);
-    char const *res = s.c_str();
-    send(clientSocket, res, sizeof(buffer), 0);
 
     // closing the socket. 
     closesocket(serverSocket); 
