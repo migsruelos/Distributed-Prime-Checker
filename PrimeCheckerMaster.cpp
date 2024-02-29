@@ -161,18 +161,13 @@ int main()
         primeChecker(1, result_bound/2, result_threads); //First half calc here
         cout << endl << "Master Result: " << numPrimes << endl;
 
-        //Convert ints to char[]
+        //Convert ints to char[] and send data of second half to slave
         std::string s = std::to_string((result_bound/2)+1);
-        char const *lower = s.c_str();
+        send(slaveSocket, s.c_str(), sizeof(buffer), 0);
         s = std::to_string(result_bound);
-        char const *upper = s.c_str();
+        send(slaveSocket, s.c_str(), sizeof(buffer), 0);
         s = std::to_string(result_threads);
-        char const *thread = s.c_str();
-
-        //Send data of second half to slave
-        send(slaveSocket, lower, sizeof(buffer), 0);
-        send(slaveSocket, upper, sizeof(buffer), 0);
-        send(slaveSocket, thread, sizeof(buffer), 0);
+        send(slaveSocket, s.c_str(), sizeof(buffer), 0);
         cout << endl << "Parameters sent to slave!" << endl;
 
         //Receive result from slave, add to numPrimes
@@ -186,9 +181,8 @@ int main()
 
       //Send the results back to client
       std::string s = std::to_string(numPrimes);
-      numPrimes = 0; //Reset
-      char const *res = s.c_str();
-      send(clientSocket, res, sizeof(buffer), 0);
+      numPrimes = 0; //Reset 
+      send(clientSocket, s.c_str(), sizeof(buffer), 0);
       cout << endl << "Client request answered! Waiting for next request..." << endl;
     }
 

@@ -134,8 +134,7 @@ int main()
       //Send the results back to client
       std::string s = std::to_string(numPrimes);
       numPrimes = 0; //Reset
-      char const *res = s.c_str();
-      send(clientSocket, res, sizeof(buffer), 0);
+      send(clientSocket, s.c_str(), sizeof(buffer), 0);
       cout << endl << "Master request answered! Waiting for next request..." << endl;
     }
 
