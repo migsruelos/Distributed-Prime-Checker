@@ -119,11 +119,6 @@ int main()
     slaveAddress.sin_port = htons(5555); 
     slaveAddress.sin_addr.s_addr = inet_addr("127.0.0.2"); 
 
-    if(useSlaves){ //Connect to slave servers
-      slaveSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-      connect(slaveSocket, (struct sockaddr*)&slaveAddress, sizeof(slaveAddress));
-    }
-  
     // binding socket. 
     bind(serverSocket, (struct sockaddr*)&serverAddress, 
          sizeof(serverAddress)); 
@@ -161,6 +156,10 @@ int main()
         primeChecker(1, result_bound/2, result_threads); //First half calc here
         cout << endl << "Master Result: " << numPrimes << endl;
 
+        //Connect to slave server
+        slaveSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        connect(slaveSocket, (struct sockaddr*)&slaveAddress, sizeof(slaveAddress));
+
         //Convert ints to char[] and send data of second half to slave
         std::string s = std::to_string((result_bound/2)+1);
         send(slaveSocket, s.c_str(), sizeof(buffer), 0);
@@ -177,6 +176,9 @@ int main()
 
         numPrimes += res;
         cout << endl << "Overall Result: " << numPrimes << endl;
+
+        //Close slave socket connection
+        closesocket(slaveSocket);
       }
 
       //Send the results back to client
@@ -184,6 +186,8 @@ int main()
       numPrimes = 0; //Reset 
       send(clientSocket, s.c_str(), sizeof(buffer), 0);
       cout << endl << "Client request answered! Waiting for next request..." << endl;
+
+      closesocket(clientSocket); //Close client socket connection
     }
 
     // closing the socket. 

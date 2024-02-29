@@ -136,6 +136,8 @@ int main()
       numPrimes = 0; //Reset
       send(clientSocket, s.c_str(), sizeof(buffer), 0);
       cout << endl << "Master request answered! Waiting for next request..." << endl;
+
+      closesocket(clientSocket); //Close client socket connection
     }
 
     // closing the socket. 
