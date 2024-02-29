@@ -8,6 +8,7 @@
 
 #define BUFFERSIZE 1024
 #define LIMIT "10000000"
+#define FLOOR "1"
 #define THREAD_COUNT "1"
 
 int main() {
@@ -37,6 +38,14 @@ int main() {
   // sending connection request 
   connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)); 
 
+  // user input for lower_bound
+  std::cout << "Enter lower bound (default=1): ";
+  std::cin.getline(buffer, BUFFERSIZE);
+  if(strcmp(buffer, "") == 0)
+    send(clientSocket, FLOOR, sizeof(buffer), 0);
+  else
+    send(clientSocket, buffer, sizeof(buffer), 0);
+  
   // user input for upper_bound
   std::cout << "Enter upper bound (default=10000000): ";
   std::cin.getline(buffer, BUFFERSIZE);

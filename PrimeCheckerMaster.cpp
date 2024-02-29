@@ -133,9 +133,14 @@ int main()
       cout << endl << "Client request received!" << endl;
     
       // recieving data 
+      int result_start = -1;
       int result_bound = -1;
       int result_threads = -1;
 
+      // receive lower limit
+      recv(clientSocket, buffer, sizeof(buffer), 0);
+      result_start = atoi(buffer);
+      
       // receive upper limit
       recv(clientSocket, buffer, sizeof(buffer), 0);
       result_bound = atoi(buffer);
@@ -147,13 +152,13 @@ int main()
       if(!useSlaves){//Replace with !useSlaves after slave servers implemented
         //If the user at server start decides not to use slave servers
         cout << endl << "Calculating with master only..." << endl;
-        primeChecker(1, result_bound, result_threads);
+        primeChecker(result_start, result_bound, result_threads);
         cout << endl << "Result: " << numPrimes << endl;
       }
       else{
         //Else use slave servers
         cout << endl << "Calculating with master and slave..." << endl;
-        primeChecker(1, result_bound/2, result_threads); //First half calc here
+        primeChecker(result_start, (result_bound+result_start)/2, result_threads); //First half calc here
         cout << endl << "Master Result: " << numPrimes << endl;
 
         //Connect to slave server
@@ -161,7 +166,7 @@ int main()
         connect(slaveSocket, (struct sockaddr*)&slaveAddress, sizeof(slaveAddress));
 
         //Convert ints to char[] and send data of second half to slave
-        std::string s = std::to_string((result_bound/2)+1);
+        std::string s = std::to_string(((result_bound+result_start)/2)+1);
         send(slaveSocket, s.c_str(), sizeof(buffer), 0);
         s = std::to_string(result_bound);
         send(slaveSocket, s.c_str(), sizeof(buffer), 0);
