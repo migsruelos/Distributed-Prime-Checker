@@ -107,7 +107,8 @@ int main()
 
     while(true){ //Make server continuously accept requests until it is closed in cmd
       // accepting connection request
-      int clientSocket = accept(serverSocket, nullptr, nullptr); 
+      int clientSocket = accept(serverSocket, nullptr, nullptr);
+      cout << endl << "Master request received!" << endl;
     
       // recieving data 
       int result_start = -1;
@@ -125,14 +126,17 @@ int main()
       // receive threads count
       recv(clientSocket, buffer, sizeof(buffer), 0);
       result_threads = atoi(buffer);
-
+    
+      cout << endl << "Calculating..." << endl;
       primeChecker(result_start ,result_bound, result_threads); //Do Calcs
+      cout << endl << "Result: " << numPrimes << endl;
 
       //Send the results back to client
       std::string s = std::to_string(numPrimes);
       numPrimes = 0; //Reset
       char const *res = s.c_str();
       send(clientSocket, res, sizeof(buffer), 0);
+      cout << endl << "Master request answered! Waiting for next request..." << endl;
     }
 
     // closing the socket. 

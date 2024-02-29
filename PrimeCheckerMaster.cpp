@@ -134,7 +134,8 @@ int main()
 
     while(true){ //Make server continuously accept requests until it is closed in cmd
       // accepting connection request
-      int clientSocket = accept(serverSocket, nullptr, nullptr); 
+      int clientSocket = accept(serverSocket, nullptr, nullptr);
+      cout << endl << "Client request received!" << endl;
     
       // recieving data 
       int result_bound = -1;
@@ -148,12 +149,17 @@ int main()
       recv(clientSocket, buffer, sizeof(buffer), 0);
       result_threads = atoi(buffer);
 
-      if(!useSlaves)//Replace with !useSlaves after slave servers implemented
+      if(!useSlaves){//Replace with !useSlaves after slave servers implemented
         //If the user at server start decides not to use slave servers
+        cout << endl << "Calculating with master only..." << endl;
         primeChecker(1, result_bound, result_threads);
+        cout << endl << "Result: " << numPrimes << endl;
+      }
       else{
         //Else use slave servers
+        cout << endl << "Calculating with master and slave..." << endl;
         primeChecker(1, result_bound/2, result_threads); //First half calc here
+        cout << endl << "Master Result: " << numPrimes << endl;
 
         //Convert ints to char[]
         std::string s = std::to_string((result_bound/2)+1);
@@ -167,10 +173,15 @@ int main()
         send(slaveSocket, lower, sizeof(buffer), 0);
         send(slaveSocket, upper, sizeof(buffer), 0);
         send(slaveSocket, thread, sizeof(buffer), 0);
+        cout << endl << "Parameters sent to slave!" << endl;
 
         //Receive result from slave, add to numPrimes
         recv(slaveSocket, buffer, sizeof(buffer), 0);
-        numPrimes += atoi(buffer);
+        int res = atoi(buffer);
+        cout << endl << "Slave Result: " << res << endl;
+
+        numPrimes += res;
+        cout << endl << "Overall Result: " << numPrimes << endl;
       }
 
       //Send the results back to client
@@ -178,6 +189,7 @@ int main()
       numPrimes = 0; //Reset
       char const *res = s.c_str();
       send(clientSocket, res, sizeof(buffer), 0);
+      cout << endl << "Client request answered! Waiting for next request..." << endl;
     }
 
     // closing the socket. 
