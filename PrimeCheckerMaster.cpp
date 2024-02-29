@@ -48,7 +48,7 @@ void get_primes(int start, int end) {
 }
 
 
-void primeChecker(int u, int t) {
+void primeChecker(int l, int u, int t) {
   int upper_bound = u;
   int num_threads = t;
 
@@ -57,7 +57,7 @@ void primeChecker(int u, int t) {
   int range_size = upper_bound / num_threads;
   
   for (int i = 0; i < num_threads; i++) {
-    int start = i * range_size + 1;
+    int start = i * range_size + l;
     int end = (i == num_threads - 1) ? upper_bound : (i + 1) * range_size;
     threads.emplace_back(get_primes, start, end);
   }
@@ -74,8 +74,6 @@ void primeChecker(int u, int t) {
 
 int main() 
 { 
-    //IDEA: What if the slave machines only returned the number of primes that they counted?
-    //      That way, we don't have to sent an array through the sockets, just ints that we add together at the end
     char buffer[BUFFERSIZE];
     bool useSlaves = false;
 
@@ -93,6 +91,10 @@ int main()
         }  
         else
             cout << "Invalid input!\n";
+    }
+
+    if(useSlaves){ //Connect to slave servers
+
     }
     
     // Initialize WSA variables
@@ -142,7 +144,7 @@ int main()
 
       if(!useSlaves || true)//Replace with !useSlaves after slave servers implemented
         //If the user at server start decides not to use slave servers
-        primeChecker(result_bound, result_threads);
+        primeChecker(1, result_bound, result_threads);
       else{
         //Else use slave servers
       }
