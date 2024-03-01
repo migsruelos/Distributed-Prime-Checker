@@ -1,4 +1,4 @@
 # Distributed Prime Checker
 
-## Special Intructions
+## Special Instructions
 Compiling may require "-lws2_32"
