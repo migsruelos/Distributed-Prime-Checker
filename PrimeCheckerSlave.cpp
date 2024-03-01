@@ -75,6 +75,23 @@ void primeChecker(int l, int u, int t) {
 int main() 
 { 
     char buffer[BUFFERSIZE];
+
+    //Get Addresses and ports
+    string serverip;
+    int serverport;
+    cout << "Server IP Address(Default=127.0.0.2): ";
+    cin.getline(buffer, BUFFERSIZE);
+    if(strcmp(buffer, "") == 0)
+      serverip = string("127.0.0.2");
+    else
+      serverip = string(buffer);
+
+    cout << "Server Port(Default=5555): ";
+    cin.getline(buffer, BUFFERSIZE);
+    if(strcmp(buffer, "") == 0)
+      serverport = 5555;
+    else
+      serverport = atoi(buffer);
     
     // Initialize WSA variables
     WSADATA wsaData;
@@ -94,8 +111,8 @@ int main()
     // specifying the address 
     sockaddr_in serverAddress; 
     serverAddress.sin_family = AF_INET; 
-    serverAddress.sin_port = htons(5555); 
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.2"); 
+    serverAddress.sin_port = htons(serverport); 
+    serverAddress.sin_addr.s_addr = inet_addr(serverip.c_str()); 
   
     // binding socket. 
     bind(serverSocket, (struct sockaddr*)&serverAddress, 

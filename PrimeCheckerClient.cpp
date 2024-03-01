@@ -11,8 +11,27 @@
 #define FLOOR "1"
 #define THREAD_COUNT "1"
 
+using namespace std;
+
 int main() {
   char buffer[BUFFERSIZE];
+
+  //Get Addresses and ports
+    string serverip;
+    int serverport;
+    cout << "Server IP Address(Default=127.0.0.1): ";
+    cin.getline(buffer, BUFFERSIZE);
+    if(strcmp(buffer, "") == 0)
+      serverip = string("127.0.0.1");
+    else
+      serverip = string(buffer);
+
+    cout << "Server Port(Default=8080): ";
+    cin.getline(buffer, BUFFERSIZE);
+    if(strcmp(buffer, "") == 0)
+      serverport = 8080;
+    else
+      serverport = atoi(buffer);
 
   // Initialize WSA variables
   WSADATA wsaData;
@@ -32,8 +51,8 @@ int main() {
   // specifying address 
   sockaddr_in serverAddress; 
   serverAddress.sin_family = AF_INET; 
-  serverAddress.sin_port = htons(8080); 
-  serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+  serverAddress.sin_port = htons(serverport); 
+  serverAddress.sin_addr.s_addr = inet_addr(serverip.c_str()); 
     
   // sending connection request 
   connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)); 

@@ -92,6 +92,39 @@ int main()
         else
             cout << "Invalid input!\n";
     }
+
+    //Get Addresses and ports
+    string serverip, slaveip ="127.0.0.2";
+    int serverport, slaveport = 8080;
+    cout << "Server IP Address(Default=127.0.0.1): ";
+    cin.getline(buffer, BUFFERSIZE);
+    if(strcmp(buffer, "") == 0)
+      serverip = string("127.0.0.1");
+    else
+      serverip = string(buffer);
+
+    cout << "Server Port(Default=8080): ";
+    cin.getline(buffer, BUFFERSIZE);
+    if(strcmp(buffer, "") == 0)
+      serverport = 8080;
+    else
+      serverport = atoi(buffer);
+
+    if(useSlaves){ //Get slave ip and port
+      cout << "Slave IP Address(Default=127.0.0.2): ";
+      cin.getline(buffer, BUFFERSIZE);
+      if(strcmp(buffer, "") == 0)
+        slaveip = string("127.0.0.2");
+      else
+        slaveip = string(buffer);
+
+      cout << "Slave Port(Default=5555): ";
+      cin.getline(buffer, BUFFERSIZE);
+      if(strcmp(buffer, "") == 0)
+        slaveport = 5555;
+      else
+        slaveport = atoi(buffer);
+    }
     
     // Initialize WSA variables
     WSADATA wsaData;
@@ -112,12 +145,12 @@ int main()
     // specifying the addresses 
     sockaddr_in serverAddress, slaveAddress; 
     serverAddress.sin_family = AF_INET; 
-    serverAddress.sin_port = htons(8080); 
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serverAddress.sin_port = htons(serverport); 
+    serverAddress.sin_addr.s_addr = inet_addr(serverip.c_str());
 
     slaveAddress.sin_family = AF_INET; 
-    slaveAddress.sin_port = htons(5555); 
-    slaveAddress.sin_addr.s_addr = inet_addr("127.0.0.2"); 
+    slaveAddress.sin_port = htons(slaveport); 
+    slaveAddress.sin_addr.s_addr = inet_addr(slaveip.c_str()); 
 
     // binding socket. 
     bind(serverSocket, (struct sockaddr*)&serverAddress, 
